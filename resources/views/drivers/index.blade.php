@@ -17,13 +17,22 @@
                             {{ session('success') }}
                         </div>
                     @endif
-
+                    @if ($errors->any())
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                            <strong>Ошибка сохранения:</strong>
+                            <ul class="mt-1 ml-4 list-disc text-sm">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ФИО</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Водительское удостоверение</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ВУ / Аккаунт</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
                                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Действие</th>
                             </tr>
@@ -32,7 +41,10 @@
                             @foreach($drivers as $driver)
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap font-medium">{{ $driver->full_name }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $driver->license_number }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm">{{ $driver->license_number }}</div>
+                                        <div class="text-xs text-gray-500">{{ $driver->user->email ?? 'Нет аккаунта' }}</div>
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         @if($driver->is_active)
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Активен</span>
@@ -68,14 +80,19 @@
                         </div>
 
                         <div>
+                            <x-input-label for="email" value="Email (для входа в приложение)" />
+                            <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" required />
+                        </div>
+
+                        <div>
                             <x-input-label for="license_number" value="Серия и номер ВУ" />
                             <x-text-input id="license_number" name="license_number" type="text" class="mt-1 block w-full" required />
                         </div>
 
                         <div class="block mt-4">
                             <label for="is_active" class="inline-flex items-center">
-                                <input id="is_active" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="is_active" checked>
-                                <span class="ms-2 text-sm text-gray-600">{{ __('Сотрудник активен (допущен к рейсам)') }}</span>
+                                <input id="is_active" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="is_active" value="1" checked>
+                                <span class="ms-2 text-sm text-gray-600">{{ __('Допущен к рейсам') }}</span>
                             </label>
                         </div>
 

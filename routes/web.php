@@ -20,6 +20,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/waybills/create', [WaybillController::class, 'create'])->name('waybills.create');
     Route::post('/waybills', [WaybillController::class, 'store'])->name('waybills.store');
+    Route::get('/waybills/{waybill}/edit', [WaybillController::class, 'edit'])->name('waybills.edit');
+    Route::put('/waybills/{waybill}', [WaybillController::class, 'update'])->name('waybills.update');
     Route::get('/waybills/{waybill}/pdf', [WaybillController::class, 'downloadPdf'])->name('waybills.pdf');
 
     // Маршруты профиля (которые вызывали ошибку)

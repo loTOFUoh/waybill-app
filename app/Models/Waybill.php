@@ -9,8 +9,14 @@ class Waybill extends Model
 {
     protected $fillable = [
         'number', 'user_id', 'driver_id', 'vehicle_id',
-        'start_km', 'end_km', 'fuel_start', 'fuel_end',
-        'fuel_consumed', 'status'
+        'departure_time', 'return_time', 'route', 'cargo_info',
+        'start_km', 'end_km', 'fuel_start', 'fuel_added', 'fuel_end',
+        'fuel_consumed', 'mechanic_name', 'medic_name', 'status'
+    ];
+
+    protected $casts = [
+        'departure_time' => 'datetime',
+        'return_time' => 'datetime',
     ];
 
     // Добавляем ": BelongsTo" к каждому методу

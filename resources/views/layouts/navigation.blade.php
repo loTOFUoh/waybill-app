@@ -12,13 +12,15 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('waybills.index')" :active="request()->routeIs('waybills.index') || request()->routeIs('dashboard')">
-                        Путевые листы
+                    <x-nav-link :href="route('waybills.index')" :active="request()->routeIs('waybills.index')">
+                        {{ __('Путевые листы') }}
                     </x-nav-link>
 
-                    <x-nav-link :href="route('waybills.create')" :active="request()->routeIs('waybills.create')">
-                        Создать путевой лист
-                    </x-nav-link>
+                    @if(Auth::user()->role !== 'driver')
+                        <x-nav-link :href="route('waybills.create')" :active="request()->routeIs('waybills.create')">
+                            {{ __('Создать путевой лист') }}
+                        </x-nav-link>
+                    @endif
 
                     @if(Auth::user()->role === 'admin')
                         <x-nav-link :href="route('vehicles.index')" :active="request()->routeIs('vehicles.*')" class="text-indigo-600 font-bold">

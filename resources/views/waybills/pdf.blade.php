@@ -1,67 +1,126 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Путевой лист</title>
+    <meta charset="utf-8">
+    <title>Путевой лист {{ $waybill->number }}</title>
     <style>
-        body { font-family: "DejaVu Sans", sans-serif; font-size: 14px; color: #333; }
-        h1 { text-align: center; font-size: 18px; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 10px; }
-        .info-table { width: 100%; margin-top: 20px; border-collapse: collapse; }
-        .info-table th, .info-table td { border: 1px solid #000; padding: 8px; text-align: left; }
-        .info-table th { background-color: #f0f0f0; width: 40%; }
-        .footer { margin-top: 40px; font-style: italic; font-size: 12px; text-align: right; }
+        /* Обязательно используем DejaVu Sans для поддержки кириллицы в DOMPDF */
+        body { font-family: "DejaVu Sans", sans-serif; font-size: 11px; line-height: 1.3; color: #000; }
+        h1 { text-align: center; font-size: 16px; margin-bottom: 15px; text-transform: uppercase; }
+        .section-title { font-weight: bold; background-color: #e5e7eb; padding: 5px; border: 1px solid #000; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        td, th { border: 1px solid #000; padding: 6px; vertical-align: top; }
+        th { background-color: #f9fafb; text-align: left; }
+        .no-border td { border: none; padding: 4px; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .sign-box { margin-top: 20px; border-top: 1px solid #000; padding-top: 5px; text-align: center; font-size: 9px; color: #555; }
     </style>
 </head>
 <body>
+
 <h1>Путевой лист № {{ $waybill->number }}</h1>
-<p><strong>Дата формирования:</strong> {{ $waybill->created_at->format('d.m.Y H:i') }}</p>
+<p class="text-center">Статус: <strong>{{ $waybill->status === 'closed' ? 'Закрыт и рассчитан' : 'В рейсе' }}</strong></p>
 
-<table class="info-table">
+<div class="section-title">1. Транспортное средство и Водитель</div>
+<table>
     <tr>
-        <th>Водитель</th>
-        <td>{{ $waybill->driver->full_name }}</td>
-    </tr>
-    <tr>
-        <th>Транспортное средство</th>
-        <td>{{ $waybill->vehicle->model }} (Гос. номер: {{ $waybill->vehicle->plate_number }})</td>
-    </tr>
-    <tr>
-        <th>Диспетчер (отв. лицо)</th>
-        <td>{{ $waybill->user->name }}</td>
+        <td width="50%">
+            <strong>Марка автомобиля:</strong> {{ $waybill->vehicle->model }}<br>
+            <strong>Государственный номер:</strong> {{ $waybill->vehicle->plate_number }}<br>
+            <strong>Тип топлива:</strong> {{ $waybill->vehicle->fuel_type }}
+        </td>
+        <td width="50%">
+            <strong>Водитель:</strong> {{ $waybill->driver->full_name }}<br>
+            <strong>Удостоверение:</strong> {{ $waybill->driver->license_number }}<br>
+            <strong>Диспетчер (выписал):</strong> {{ $waybill->user->name }}
+        </td>
     </tr>
 </table>
 
-<h2 style="font-size: 16px; margin-top: 30px;">Данные о работе и расходе ГСМ:</h2>
-<table class="info-table">
+<div class="section-title">2. Задание водителю</div>
+<table>
     <tr>
-        <th>Показания одометра (выезд)</th>
+        <td width="70%"><strong>Маршрут следования:</strong> {{ $waybill->route }}</td>
+        <td width="30%"><strong>Груз:</strong> {{ $waybill->cargo_info ?: 'Без груза' }}</td>
+    </tr>
+</table>
+
+<div class="section-title">3. Работа автомобиля и расход ГСМ</div>
+<table>
+    <tr>
+        <th width="25%">Показатель</th>
+        <th width="25%">При выезде</th>
+        <th width="25%">При возвращении</th>
+        <th width="25%">Итого за рейс</th>
+    </tr>
+    <tr>
+        <td><strong>Дата и время</strong></td>
+        <td>{{ $waybill->departure_time ? $waybill->departure_time->format('d.m.Y H:i') : '-' }}</td>
+        <td>{{ $waybill->return_time ? $waybill->return_time->format('d.m.Y H:i') : '-' }}</td>
+        <td>
+            @if($waybill->departure_time && $waybill->return_time)
+                {{ $waybill->departure_time->diffInHours($waybill->return_time) }} ч.
+            @endif
+        </td>
+    </tr>
+    <tr>
+        <td><strong>Показания одометра</strong></td>
         <td>{{ $waybill->start_km }} км</td>
+        <td>{{ $waybill->end_km ?? '-' }} км</td>
+        <td><strong>{{ $waybill->end_km ? ($waybill->end_km - $waybill->start_km) : 0 }} км</strong></td>
     </tr>
     <tr>
-        <th>Показания одометра (возврат)</th>
-        <td>{{ $waybill->end_km }} км</td>
-    </tr>
-    <tr>
-        <th>Пройдено за рейс</th>
-        <td><strong>{{ $waybill->end_km - $waybill->start_km }} км</strong></td>
-    </tr>
-    <tr>
-        <th>Остаток топлива (выезд)</th>
-        <td>{{ $waybill->fuel_start }} л</td>
-    </tr>
-    <tr>
-        <th>Расход топлива (по норме)</th>
-        <td><strong>{{ $waybill->fuel_consumed }} л</strong></td>
-    </tr>
-    <tr>
-        <th>Остаток топлива (возврат)</th>
-        <td>{{ $waybill->fuel_end }} л</td>
+        <td><strong>Движение топлива</strong></td>
+        <td>{{ $waybill->fuel_start }} л.</td>
+        <td>
+            Остаток: {{ $waybill->fuel_end ?? '-' }} л.<br>
+            Заправка: {{ $waybill->fuel_added ?? '0' }} л.
+        </td>
+        <td>
+            Фактический расход:<br>
+            <strong>{{ $waybill->fuel_consumed ?? '-' }} л.</strong>
+        </td>
     </tr>
 </table>
 
-<div class="footer">
-    Документ сгенерирован автоматически подсистемой CargoWaybill.<br>
-    DevOps Pipeline Status: Active
-</div>
+<div class="section-title">4. Расчет нормы (Справочно)</div>
+<table>
+    <tr>
+        <td>Базовая норма ТС: <strong>{{ $waybill->vehicle->base_consumption }} л / 100 км</strong></td>
+        <td>
+            Нормативный расход за рейс:
+            <strong>
+                @if($waybill->end_km)
+                    {{ number_format((($waybill->end_km - $waybill->start_km) * $waybill->vehicle->base_consumption) / 100, 2) }} л.
+                @else
+                    -
+                @endif
+            </strong>
+        </td>
+    </tr>
+</table>
+
+<div class="section-title">5. Отметки и подписи</div>
+<table class="no-border" style="margin-top: 15px;">
+    <tr>
+        <td width="33%" class="text-center">
+            Выезд разрешаю. Технически исправен.<br><br><br>
+            _______________________<br>
+            Механик: {{ $waybill->mechanic_name ?? '_______________' }}
+        </td>
+        <td width="33%" class="text-center">
+            Медосмотр прошел. К рейсу допущен.<br><br><br>
+            _______________________<br>
+            Медик: {{ $waybill->medic_name ?? '_______________' }}
+        </td>
+        <td width="33%" class="text-center">
+            Автомобиль сдал. Путевой лист закрыт.<br><br><br>
+            _______________________<br>
+            Водитель: {{ $waybill->driver->full_name }}
+        </td>
+    </tr>
+</table>
+
 </body>
 </html>
