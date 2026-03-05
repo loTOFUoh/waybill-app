@@ -36,8 +36,18 @@ jobs:
           extensions: mbstring, bcmath, pdo_mysql, redis, dom
           coverage: none
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Install Composer Dependencies
         run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+      - name: Install NPM Dependencies and Build Frontend
+        run: |
+          npm ci
+          npm run build
 
       - name: Prepare Application
         run: |
